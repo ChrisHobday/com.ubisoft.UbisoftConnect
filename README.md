@@ -1,4 +1,4 @@
-# Unofficial ubisoft UbisoftConnect Flatpak
+# Ubisoft Connect Flatpak (Unofficial)
 ## Installing
 - Download and install WineStaging Flatpaks from https://github.com/ChrisHobday/org.winehq.WineStaging/releases (This Flatpak uses them as a base)
 - Download UbisoftConnect.flatpak from releases
