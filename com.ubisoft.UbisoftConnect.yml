@@ -1,12 +1,12 @@
 app-id: com.ubisoft.UbisoftConnect
 sdk: org.freedesktop.Sdk
 runtime: org.freedesktop.Platform
-runtime-version: &runtime-version '23.08'
+runtime-version: &runtime-version '24.08'
 base: org.winehq.WineStaging
-base-version: stable-23.08
-command: UbisoftConnectWrapper
+base-version: stable-24.08
 rename-desktop-file: UbisoftConnect.desktop
 rename-icon: UbisoftConnect
+command: UbisoftConnect
 finish-args:
   - --device=all
   - --filesystem=host:ro
@@ -17,7 +17,8 @@ finish-args:
   - --share=network
   - --share=ipc
   - --allow=multiarch
-  - --env=WINEPREFIX=/var/data/WinePrefix
+  - --env=WINEPREFIX=/var/data/wine # The Wine prefix where Windows files and .exe files are installed
+# - --env=WINEARCH=win32 # Set 32 bit architecture for Wine prefix
 inherit-extensions:
   - org.freedesktop.Platform.Compat.i386
   - org.freedesktop.Platform.GL32
@@ -27,118 +28,42 @@ inherit-extensions:
   - org.winehq.WineStaging.mono
   - org.winehq.WineStaging.DLLs
 modules:
-  # Icoutils, needed for extracting .ico from UbisoftConnectInstaller.exe
-  - name: Icoutils
+  - name: Ubisoft Connect
     buildsystem: simple
     sources:
-      - type: archive
-        url: http://savannah.nongnu.org/download/icoutils/icoutils-0.32.3.tar.bz2
-        sha256: 17abe02d043a253b68b47e3af69c9fc755b895db68fdc8811786125df564c6e0
-    build-commands:
-      - |
-        echo "Configuring and make Icoutls"
-        ./configure --prefix=${FLATPAK_DEST}
-        make
-
-        echo "Installing Icoutils"
-        make install
-  # ImageMagick, needed for converting .ico extracted from exe to .png
-  - name: ImageMagick
-    buildsystem: simple
-    sources:
-      - type: git
-        url: https://github.com/ImageMagick/ImageMagick.git
-        tag: 7.1.1-36
-    build-commands:
-      - |
-        echo "Configuring and make ImageMagick"
-        ./configure --prefix=${FLATPAK_DEST}
-        make
-
-        echo "Installing ImageMagick"
-        make install
-  - name: UbisoftConnect
-    buildsystem: simple
-    sources:
-      # Metadata file for Flatpak repos
-      - type: file
-        path: com.ubisoft.UbisoftConnect.metainfo.xml
-      # The Windows exe that will be ran with wine to install UbisoftConnect (If it is already installed, the exe instead launches UbisoftConnect)
       - type: file
         url: https://ubi.li/4vxt9
-        sha256: 3c905d334bbcefd148cd43ae70dc68d8a643603fffc441dc76c2ff0a1bf0d62f
+        sha256: d2e9901118ae9e4fc4db873973161f433beb1bf20447d86a4d7736d57050ad2e
         dest-filename: UbisoftConnectInstaller.exe
-      # Shell script that extracts UbisoftConnect icon from the UbisoftConnectInstaller.exe, converts it to different sized png files and move those to the correct icon locations
-      - type: shell
-        commands:
-          - |
-            echo "Extracting UbisoftConnect icon from UbisoftConnectInstaller.exe"
-            wrestool -x --output=UbisoftConnect.ico -t14 UbisoftConnectInstaller.exe
-
-            echo "Converting UbisoftConnect.ico to UbisoftConnect.png"
-            convert UbisoftConnect.ico UbisoftConnect.png
-
-            echo "Moving UbisoftConnect-4.png to /app/share/icons/hicolor/64x64/apps/UbisoftConnect.png"
-            mv UbisoftConnect-4.png /app/share/icons/hicolor/64x64/apps/UbisoftConnect.png
-
-            # TODO: Find fix for "error: regfile copy: Input/output error" associated with this 128x128 file
-            # echo "Moving UbisoftConnect-6.png to /app/share/icons/hicolor/128x128/apps/UbisoftConnect.png"
-            # mv UbisoftConnect-6.png /app/share/icons/hicolor/128x128/apps/UbisoftConnect.png
-
-            # TODO: Find fix for "error: regfile copy: Input/output error" associated with this 256x256 file
-            # echo "Moving UbisoftConnect-7.png to /app/share/icons/hicolor/256x256/apps/UbisoftConnect.png"
-            # mv UbisoftConnect-7.png /app/share/icons/hicolor/256x256/apps/UbisoftConnect.png
-      # Shell script that creates a UbisoftConnect.desktop file in the correct location
-      - type: shell
-        commands:
-          - |
-            echo "Creating /app/share/applications/UbisoftConnect.desktop file"
-            touch /app/share/applications/UbisoftConnect.desktop
-
-            echo "Writing contents to /app/share/applications/UbisoftConnect.desktop file"
-            echo "[Desktop Entry]
-            Type=Application
-            Name=UbisoftConnect
-            GenericName=UbisoftConnect
-            Comment=UbisoftConnect launcher (Flatpak)
-            Exec=UbisoftConnectWrapper
-            Categories=Game;
-            Icon=UbisoftConnect
-            Keywords=Ubisoft;UbisoftConnect;XDefiant;Assassin's Creed;Rayman;Rabbids;Star Wars;Prince of Persia;Skull and Bones;Avatar;Far Cry;For Honor;The Crew;Brawlhalla;Trackmania;Ghost Recon;The Division;Watch Dogs;The Settlers;Rainbow Six;Immortals;Trials;Child of Light" >> /app/share/applications/UbisoftConnect.desktop
-      # Shell script that sets up the Wine Prefix
-      - type: shell
-        commands:
-          - |
-            echo "Creating Wine Prefix at /var/data/WinePrefix"
-            wineboot --init
-
-            echo ""
-      # Script that is ran everytime the final Flatpak is ran, which sets up Discord rich presence and than runs the UbisoftConnectInstaller.exe with Wine
-      - type: script
-        commands:
-          - |
-            echo "Setting up Discord rich presence"
-            for i in {0..9}; do
-              test -S $XDG_RUNTIME_DIR/discord-ipc-$i ||
-                ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
-            done
-
-            UbisoftConnect="/var/data/WinePrefix/drive_c/Program Files (x86)/Ubisoft/Ubisoft Game Launcher/UbisoftConnect.exe"
-            if [ -e "$UbisoftConnect" ]; then
-                echo "Ubisoft Connect found, launching now"
-                wine "/var/data/WinePrefix/drive_c/Program Files (x86)/Ubisoft/Ubisoft Game Launcher/UbisoftConnect.exe"
-            else 
-                echo "Ubisoft Connect not found, launching installer now"
-                wine /app/bin/UbisoftConnectInstaller.exe
-            fi
-        dest-filename: UbisoftConnectWrapper
+      - type: file
+        path: Scripts/UbisoftConnect
+      - type: file
+        path: DesktopEntries/UbisoftConnect.desktop
+      - type: file
+        path: com.ubisoft.UbisoftConnect.metainfo.xml
+      - type: file
+        path: Icons/UbisoftConnect256x256.png
+      - type: file
+        path: Icons/UbisoftConnect128x128.png
+      - type: file
+        path: Icons/UbisoftConnect64x64.png
+      - type: file
+        path: Icons/UbisoftConnect48x48.png
+      - type: file
+        path: Icons/UbisoftConnect32x32.png
+      - type: file
+        path: Icons/UbisoftConnect16x16.png
     build-commands:
       - |
-        echo "Installing com.ubisoft.UbisoftConnect.metainfo.xml in /app/share/metainfo/"
-        install -Dm644 -t /app/share/metainfo/ com.ubisoft.UbisoftConnect.metainfo.xml
-
-        echo "Moving UbisoftConnectInstaller.exe to /app/bin"
-        mv UbisoftConnectInstaller.exe /app/bin
-
-        echo "Moving UbisoftConnectWrapper to /app/bin"
-        mv UbisoftConnectWrapper /app/bin
+        install -Dm744 UbisoftConnectInstaller.exe -t /app/bin
+        # install -Dm644 WineGraphics.reg /app/share
+        install -Dm744 UbisoftConnect -t /app/bin/
+        install -Dm644 UbisoftConnect.desktop -t /app/share/applications
+        install -Dm644 com.ubisoft.UbisoftConnect.metainfo.xml -t /app/share/metainfo
+        install -Dm644 UbisoftConnect256x256.png -T /app/share/icons/hicolor/256x256/apps/UbisoftConnect.png
+        install -Dm644 UbisoftConnect128x128.png -T /app/share/icons/hicolor/128x128/apps/UbisoftConnect.png
+        install -Dm644 UbisoftConnect64x64.png -T /app/share/icons/hicolor/64x64/apps/UbisoftConnect.png
+        install -Dm644 UbisoftConnect48x48.png -T /app/share/icons/hicolor/48x48/apps/UbisoftConnect.png
+        install -Dm644 UbisoftConnect32x32.png -T /app/share/icons/hicolor/32x32/apps/UbisoftConnect.png
+        install -Dm644 UbisoftConnect16x16.png -T /app/share/icons/hicolor/16x16/apps/UbisoftConnect.png
+        # mkdir -p /app/extensions
