@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=Ubisoft Connect
+Name=Ubisoft Connect (Unofficial)
 GenericName=Ubisoft Connect
-Comment=Ubisoft Connect (Unofficial)
-Exec=UbisoftConnect
+Comment=Game Launcher
+Exec=UbisoftConnect.sh
 Categories=Game;
-Icon=UbisoftConnect
+Icon=com.ubisoft.UbisoftConnect
 Keywords=Ubisoft;Ubisoft Connect;XDefiant;Assassin's Creed;Rayman;Rabbids;Star Wars;Prince of Persia;Skull and Bones;Avatar;Far Cry;For Honor;The Crew;Brawlhalla;Trackmania;Ghost Recon;The Division;Watch Dogs;The Settlers;Rainbow Six;Immortals;Trials;Child of Light;

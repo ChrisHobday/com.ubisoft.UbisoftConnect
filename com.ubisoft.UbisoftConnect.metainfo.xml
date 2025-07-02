@@ -2,8 +2,8 @@
 <component type="desktop-application">
   <id>com.ubisoft.UbisoftConnect</id>
   
-  <name>Ubisoft Connect</name>
-  <summary>Unofficial Connect (Unofficial)</summary>
+  <name>Ubisoft Connect (Unofficial)</name>
+  <summary>Game Launcher</summary>
   
   <metadata_license>CC-BY-SA-3.0</metadata_license>
   <project_license>GPL-2.0+</project_license>
@@ -16,12 +16,12 @@
   
   <description>
     <p>
-      Unofficial Connect (Unofficial)
+      Ubisoft Connect (Unofficial)
     </p>
   </description>
 
   <releases>
-    <release version="1" date="2024-08-10"/>
+    <release version="1" date="2025-07-02"/>
   </releases>
   
   <launchable type="desktop-id">com.ubisoft.UbisoftConnect.desktop</launchable>
